@@ -7,7 +7,7 @@ library(dplyr)
 library(factoextra)
 library(stringr)
 # --------- loading data ---------
-data = read.delim("~/Downloads/games.txt")
+data = read.delim("./games.txt")
 # changing types of data
 data$date = format(as.Date(data$date), "%Y")
 data$date = as.numeric(data$date)
