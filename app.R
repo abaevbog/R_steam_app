@@ -7,7 +7,7 @@ library(dplyr)
 library(factoextra)
 library(stringr)
 # --------- loading data ---------
-data = read.delim("./games.txt")
+data = read.delim("/Users/bogdanabaev/College/R_code/FinalProj/games.txt")
 # changing types of data
 data$date = format(as.Date(data$date), "%Y")
 data$date = as.numeric(data$date)
@@ -27,7 +27,7 @@ df1 = df1[-which(is.na(df1$date)),]
 df1 = df1[-which(is.na(df1$price)),]
 
 k2 = kmeans(scale(df1), centers = 3, nstart = 25)
-
+print("A")
 # loading the model
 ud_model <- udpipe_download_model(language = "english")
 ud_model <- udpipe_load_model(ud_model$file_model)
