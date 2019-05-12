@@ -10,15 +10,15 @@ library(igraph)
 library(ggraph)
 library(ggplot2)
 library(dplyr)
+library(tm)
 # --------- loading data ---------
-data = read.csv("~/Downloads/gamesfinalish.csv")
+data = read.csv("/Users/bogdanabaev/College/R_code/FinalProj/gamesfinalish.csv", fileEncoding="latin1")
 data$reviews = as.character(data$reviews)
 data$description = as.character(data$description)
 data = data[-which(data$description==""),]
 data = data[-which(data$reviews==""),]
 data = data[-which(is.na(data$price)),]
 data = data[-which(is.na(data$date)),]
-data = data[-which(str_length(data$reviews) > 2500),]
 # changing types of data
 data$date = format(as.Date(data$date), "%Y")
 data$date = as.numeric(data$date)
@@ -38,17 +38,17 @@ data_racing = data[grep("Racing", data$tags),]
 data_racing = head(data_racing, 80)
 data_horror = data[grep("Horror", data$tags),]
 data_horror = head(data_horror, 80)
-data  = rbind(data_fps,data_rpg,data_action,data_strategy,data_racing,data_horror)
+data_sample  = rbind(data_fps,data_rpg,data_action,data_strategy,data_racing,data_horror)
 data$reviews = as.character(data$reviews)
 # for the word cloud 
-df = data
+df = data_sample
 df$reviews = str_replace_all(df$reviews,
                              "game|review|player|time|level|thing|new|many|[Ee]arly|more|same|such|own|other|edtion",
                              "")
 df$reviews = as.character(df$reviews)
 
 # for the word distance map
-df2 = data
+df2 = data_sample
 df2$reviews = gsub("(f|ht)tp\\S+\\s*", "", df2$reviews)
 
 # loading the model
@@ -56,7 +56,7 @@ ud_model <- udpipe_download_model(language = "english")
 ud_model <- udpipe_load_model(ud_model$file_model)
 
 ##preprocess prediction stuff
-corpus = Corpus(VectorSource(paste(data$description))) # description or reviews or all of them?
+corpus = Corpus(VectorSource(data$description)) # description or reviews or all of them?
 ndocs = length(corpus)
 minDocFreq <- ndocs * 0.01
 maxDocFreq <- ndocs * 0.7 #(not too rare, not too frequent words)
@@ -67,16 +67,16 @@ clean_corpus = tm_map(clean_corpus, stemDocument)
 clean_corpus <- tm_map(clean_corpus, removeWords, 
                               c(stopwords("english"))) # stop_vec - vector of additional words we don't want
 dtm_no_stops<- DocumentTermMatrix(clean_corpus, control = list(bounds = list(global = c(minDocFreq, maxDocFreq))))
-row.names(dtm_no_stops) = data$title
-df = as.data.frame(as.matrix(dtm_no_stops))
+row.names(dtm_no_stops) = data$id
+bodgans_df = as.data.frame(as.matrix(dtm_no_stops))
 
 ##trying to do fancy frequency stuff
-freq_inverse = 1/colSums(as.matrix(df))
+freq_inverse = 1/colSums(as.matrix(bodgans_df))
 ##
 
-for (col in colnames(df)){
-  df[,col] = df[,col] > 0
-  df[df[,col],col] = freq_inverse[col]
+for (col in colnames(bodgans_df)){
+  bodgans_df[,col] = bodgans_df[,col] > 0
+  bodgans_df[bodgans_df[,col],col] = freq_inverse[col]
 }
 # prediction stuff preprocessing done
 
@@ -284,9 +284,9 @@ server <- function(input, output) {
     input_corp = tm_map(input_corp,stemDocument)
     input_corp = tm_map(input_corp, removeWords, c(stopwords("english"))) 
     input = as.vector(unlist(input_corp))
-    input = input[input %in% colnames(df)]
-    result = df[,input]
-    if (dim(df[,input])[2] > 1){
+    input = input[input %in% colnames(bodgans_df)]
+    result = bodgans_df[,input]
+    if (dim(bodgans_df[,input])[2] > 1){
       result = rowSums(result, na.rm = TRUE)
     } else {
       result = sum(result, na.rm = TRUE)
@@ -294,7 +294,9 @@ server <- function(input, output) {
     result = sort(-result)
     result = result[1:10]
     answer = attr(result,"names")
-    table_data = data[data$title %in% answer,c("title","date","price","tags")]
+    answer = substring(answer,2)
+    table_data = data[data$id %in% as.numeric(answer),c("title","date","price","tags")]
+    print(table_data)
     return(table_data)
   })
   
