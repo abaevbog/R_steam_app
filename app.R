@@ -54,6 +54,33 @@ df2$reviews = gsub("(f|ht)tp\\S+\\s*", "", df2$reviews)
 # loading the model
 ud_model <- udpipe_download_model(language = "english")
 ud_model <- udpipe_load_model(ud_model$file_model)
+
+##preprocess prediction stuff
+corpus = Corpus(VectorSource(paste(data$description))) # description or reviews or all of them?
+ndocs = length(corpus)
+minDocFreq <- ndocs * 0.01
+maxDocFreq <- ndocs * 0.7 #(not too rare, not too frequent words)
+clean_corpus <- tm_map(corpus, tolower)
+clean_corpus = tm_map(clean_corpus, removePunctuation)
+clean_corpus = tm_map(clean_corpus, stripWhitespace)
+clean_corpus = tm_map(clean_corpus, stemDocument)
+clean_corpus <- tm_map(clean_corpus, removeWords, 
+                              c(stopwords("english"))) # stop_vec - vector of additional words we don't want
+dtm_no_stops<- DocumentTermMatrix(clean_corpus, control = list(bounds = list(global = c(minDocFreq, maxDocFreq))))
+row.names(dtm_no_stops) = data$title
+df = as.data.frame(as.matrix(dtm_no_stops))
+
+##trying to do fancy frequency stuff
+freq_inverse = 1/colSums(as.matrix(df))
+##
+
+for (col in colnames(df)){
+  df[,col] = df[,col] > 0
+  df[df[,col],col] = freq_inverse[col]
+}
+# prediction stuff preprocessing done
+
+
 # --------- ui code ---------
 ui <- fluidPage(
   
@@ -250,7 +277,25 @@ server <- function(input, output) {
   output$matched_games = renderTable({
     x = gameTable()
     print(x)
-    return(iris)
+    input = unlist(strsplit(x," "))
+    input_corp = Corpus(VectorSource(input))
+    input_corp = tm_map(input_corp,tolower)
+    input_corp = tm_map(input_corp,removePunctuation)
+    input_corp = tm_map(input_corp,stemDocument)
+    input_corp = tm_map(input_corp, removeWords, c(stopwords("english"))) 
+    input = as.vector(unlist(input_corp))
+    input = input[input %in% colnames(df)]
+    result = df[,input]
+    if (dim(df[,input])[2] > 1){
+      result = rowSums(result, na.rm = TRUE)
+    } else {
+      result = sum(result, na.rm = TRUE)
+    }
+    result = sort(-result)
+    result = result[1:10]
+    answer = attr(result,"names")
+    table_data = data[data$title %in% answer,c("title","date","price","tags")]
+    return(table_data)
   })
   
   
