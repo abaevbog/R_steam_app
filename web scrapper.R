@@ -145,29 +145,29 @@ map_df(1:900, function(i) {
 }) -> games
 
 # games2 <- games
-games10$X <- NULL
-games11$X <- NULL
-games12$X <- NULL
-games13$X <- NULL
-games7$X <- NULL
-games8$X <- NULL
-games9$X <- NULL
-games3$X <- NULL
+# games10$X <- NULL
+# games11$X <- NULL
+# games12$X <- NULL
+# games13$X <- NULL
+# games7$X <- NULL
+# games8$X <- NULL
+# games9$X <- NULL
+# games3$X <- NULL
 
-games_final = do.call("rbind", list(games, games2, games10, games11, games12, games13, games7, games8, games9, games3))
+# games_final = do.call("rbind", list(games, games2, games10, games11, games12, games13, games7, games8, games9, games3))
 
-games_final = rbind(games, games2, games10, games11, games12, games13, games7, games8, games9, games3,)
+# games_final = rbind(games, games2, games10, games11, games12, games13, games7, games8, games9, games3,)
 
-write.csv(gamesfinalish, file = "~/Downloads/gamesfinalish.csv", quote = TRUE )
+write.csv(games, file = "~/Downloads/gamesfinalish.csv", quote = TRUE )
 
-write.table(games, file = "~/Downloads/games3.txt",row.names=FALSE, na="",col.names=TRUE, sep="\t")
+# write.table(games, file = "~/Downloads/games3.txt",row.names=FALSE, na="",col.names=TRUE, sep="\t")
 
 # write an object  
 dput(games, "~/Downloads/out")
 # read an object
 df  <- dget("out")
 
-gamesfinalish$reviews <- str_replace_all(gamesfinalish$reviews, "[^[:alnum:]]", " ")
-gamesfinalish$description <- str_replace_all(gamesfinalish$description, " [^[:alnum:]]", " ")
-gamesfinalish$X <- NULL
+# gamesfinalish$reviews <- str_replace_all(gamesfinalish$reviews, "[^[:alnum:]]", " ")
+# gamesfinalish$description <- str_replace_all(gamesfinalish$description, " [^[:alnum:]]", " ")
+# gamesfinalish$X <- NULL
 
